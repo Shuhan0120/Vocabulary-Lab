@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#73c3c4" />
+    <meta name="description" content="中文优先的手机端英语单词学习卡片" />
+    <title>十词 · 英语单词学习</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" aria-label="十词英语学习应用">
+      <section id="study-view" class="view active" aria-label="学习">
+        <header class="study-hero">
+          <div class="hero-toolbar">
+            <span id="progress-label" class="progress-label">第 1 / 10 词</span>
+            <button id="reset-button" class="icon-button hero-icon" type="button" aria-label="重置学习记录" title="重置学习记录">↻</button>
+          </div>
+          <div class="prompt-block">
+            <span id="part-of-speech" class="part-tag">名词短语</span>
+            <h1 id="chinese-prompt">无糖可乐</h1>
+            <p id="prompt-hint">回想它的英文、发音和用法</p>
+          </div>
+          <div class="progress-track" aria-hidden="true"><span id="progress-fill"></span></div>
+        </header>
+
+        <section class="study-body">
+          <article id="recall-card" class="recall-card" tabindex="0" role="button" aria-label="点击显示答案">
+            <div id="hidden-state" class="hidden-state">
+              <span class="recall-mark">?</span>
+              <strong>想好了吗？</strong>
+              <span>点击卡片显示答案</span>
+            </div>
+
+            <div id="answer-state" class="answer-state" hidden>
+              <div class="word-heading">
+                <div>
+                  <span class="answer-kicker">英文</span>
+                  <h2 id="english-word">Diet Coke</h2>
+                </div>
+                <button id="word-audio" class="icon-button audio-button" type="button" aria-label="播放单词发音" title="播放单词发音">🔊</button>
+              </div>
+
+              <div class="pronunciation-grid">
+                <div class="pronunciation-item">
+                  <span>音标</span>
+                  <strong id="ipa">/ˈdaɪət koʊk/</strong>
+                </div>
+                <div class="pronunciation-item">
+                  <span>中文读音</span>
+                  <strong id="phonetic-cn">代儿特 口克</strong>
+                </div>
+                <div class="pronunciation-item full">
+                  <span>拆分拼读</span>
+                  <strong id="syllables">di-e-t co-ke</strong>
+                </div>
+              </div>
+
+              <section class="meaning-section" aria-labelledby="meaning-title">
+                <div class="section-title-row">
+                  <h3 id="meaning-title">含义</h3>
+                  <span id="sense-count">1 个义项</span>
+                </div>
+                <div id="meanings" class="meaning-list"></div>
+              </section>
+
+              <section id="forms-section" class="forms-section" aria-labelledby="forms-title" hidden>
+                <h3 id="forms-title">词形变化</h3>
+                <div id="word-forms" class="word-forms"></div>
+              </section>
+
+              <section class="examples-section" aria-labelledby="examples-title">
+                <div class="section-title-row">
+                  <h3 id="examples-title">例句</h3>
+                  <span id="example-count">3 句</span>
+                </div>
+                <div id="examples" class="examples-list"></div>
+              </section>
+
+              <aside id="related-note" class="related-note" hidden></aside>
+            </div>
+          </article>
+
+          <div class="pager" aria-label="单词翻页">
+            <button id="previous-button" class="pager-button" type="button" aria-label="上一个单词" title="上一个单词">‹</button>
+            <div id="dot-indicator" class="dot-indicator" aria-label="当前学习进度"></div>
+            <button id="next-button" class="pager-button" type="button" aria-label="下一个单词" title="下一个单词">›</button>
+          </div>
+        </section>
+
+        <section id="rating-panel" class="rating-panel" aria-label="记忆程度选择" hidden>
+          <button class="rating-button known" type="button" data-rating="known">
+            <strong>认识</strong><span>记得很清楚</span>
+          </button>
+          <button class="rating-button fuzzy" type="button" data-rating="fuzzy">
+            <strong>模糊</strong><span>需要再复习</span>
+          </button>
+          <button class="rating-button forgotten" type="button" data-rating="forgotten">
+            <strong>忘记</strong><span>重新记一遍</span>
+          </button>
+        </section>
+      </section>
+
+      <section id="words-view" class="view secondary-view" aria-label="词表">
+        <header class="secondary-header">
+          <span class="eyebrow">前 10 个词</span>
+          <h1>单词列表</h1>
+          <p>按学习状态快速回到任意一张单词卡。</p>
+        </header>
+        <div id="word-list" class="word-list"></div>
+      </section>
+
+      <section id="progress-view" class="view secondary-view" aria-label="进度">
+        <header class="secondary-header">
+          <span class="eyebrow">本机学习记录</span>
+          <h1>学习进度</h1>
+          <p>记录保存在当前浏览器中，关闭页面也不会丢失。</p>
+        </header>
+        <section class="progress-overview" aria-label="学习统计">
+          <div class="progress-score"><strong id="completed-count">0</strong><span>/ 10 已判断</span></div>
+          <div id="progress-bars" class="progress-bars"></div>
+        </section>
+        <button id="continue-button" class="continue-button" type="button">继续学习</button>
+      </section>
+
+      <nav class="bottom-nav" aria-label="主导航">
+        <button class="nav-button active" type="button" data-view="study-view" aria-current="page">
+          <span class="nav-icon">◉</span><span>学习</span>
+        </button>
+        <button class="nav-button" type="button" data-view="words-view">
+          <span class="nav-icon">▤</span><span>词表</span>
+        </button>
+        <button class="nav-button" type="button" data-view="progress-view">
+          <span class="nav-icon">▥</span><span>进度</span>
+        </button>
+      </nav>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
+

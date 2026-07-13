@@ -4,41 +4,55 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#73c3c4" />
-    <meta name="description" content="中文优先的手机端英语单词学习卡片" />
-    <title>十词 · 英语单词学习</title>
+    <meta name="description" content="支持中英文双向记忆和每日打卡的手机端英语单词学习工具" />
+    <title>英语单词学习 · Vocabulary Lab</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="app-shell" aria-label="十词英语学习应用">
+    <main class="app-shell" aria-label="英语单词学习应用">
       <section id="study-view" class="view active" aria-label="学习">
         <header class="study-hero">
           <div class="hero-toolbar">
             <span id="progress-label" class="progress-label">第 1 / 10 词</span>
-            <button id="reset-button" class="icon-button hero-icon" type="button" aria-label="重置学习记录" title="重置学习记录">↻</button>
+            <button id="reset-button" class="icon-button hero-icon" type="button" aria-label="重置今日学习" title="重置今日学习">↻</button>
           </div>
+
+          <div class="mode-switch" role="group" aria-label="学习版本">
+            <button class="mode-button active" type="button" data-mode="english" aria-pressed="true">英文版</button>
+            <button class="mode-button" type="button" data-mode="chinese" aria-pressed="false">中文版</button>
+          </div>
+
           <div class="prompt-block">
-            <span id="part-of-speech" class="part-tag">名词短语</span>
-            <h1 id="chinese-prompt">无糖可乐</h1>
-            <p id="prompt-hint">回想它的英文、发音和用法</p>
+            <div class="prompt-meta">
+              <span id="part-of-speech" class="part-tag">名词短语</span>
+              <span id="attempt-label" class="attempt-tag">首次学习</span>
+            </div>
+            <h1 id="study-prompt">Diet Coke</h1>
+            <p id="prompt-hint">回想它的中文释义</p>
           </div>
           <div class="progress-track" aria-hidden="true"><span id="progress-fill"></span></div>
         </header>
 
         <section class="study-body">
-          <article id="recall-card" class="recall-card" tabindex="0" role="button" aria-label="点击显示答案">
-            <div id="hidden-state" class="hidden-state">
+          <article id="recall-card" class="recall-card" aria-live="polite">
+            <div id="prompt-state" class="prompt-state">
               <span class="recall-mark">?</span>
-              <strong>想好了吗？</strong>
-              <span>点击卡片显示答案</span>
+              <strong>这次记得怎么样？</strong>
+              <span>先选择记忆状态，再查看答案</span>
             </div>
 
             <div id="answer-state" class="answer-state" hidden>
               <div class="word-heading">
                 <div>
-                  <span class="answer-kicker">英文</span>
-                  <h2 id="english-word">Diet Coke</h2>
+                  <span id="answer-kicker" class="answer-kicker">中文释义</span>
+                  <h2 id="answer-title">无糖可乐</h2>
                 </div>
                 <button id="word-audio" class="icon-button audio-button" type="button" aria-label="播放单词发音" title="播放单词发音">🔊</button>
+              </div>
+
+              <div class="counterpart-row">
+                <span id="counterpart-label">英文词条</span>
+                <strong id="counterpart-value">Diet Coke</strong>
               </div>
 
               <div class="pronunciation-grid">
@@ -55,14 +69,6 @@
                   <strong id="syllables">di-e-t co-ke</strong>
                 </div>
               </div>
-
-              <section class="meaning-section" aria-labelledby="meaning-title">
-                <div class="section-title-row">
-                  <h3 id="meaning-title">含义</h3>
-                  <span id="sense-count">1 个义项</span>
-                </div>
-                <div id="meanings" class="meaning-list"></div>
-              </section>
 
               <section id="forms-section" class="forms-section" aria-labelledby="forms-title" hidden>
                 <h3 id="forms-title">词形变化</h3>
@@ -81,46 +87,98 @@
             </div>
           </article>
 
-          <div class="pager" aria-label="单词翻页">
-            <button id="previous-button" class="pager-button" type="button" aria-label="上一个单词" title="上一个单词">‹</button>
-            <div id="dot-indicator" class="dot-indicator" aria-label="当前学习进度"></div>
-            <button id="next-button" class="pager-button" type="button" aria-label="下一个单词" title="下一个单词">›</button>
+          <div class="session-strip" aria-live="polite">
+            <span id="mastered-label">已掌握 0 / 10</span>
+            <span id="queue-label">待学习 9 词</span>
           </div>
+          <div id="dot-indicator" class="dot-indicator" aria-label="今日单词掌握进度"></div>
         </section>
 
-        <section id="rating-panel" class="rating-panel" aria-label="记忆程度选择" hidden>
+        <section id="rating-panel" class="action-panel rating-panel" aria-label="记忆程度选择">
           <button class="rating-button known" type="button" data-rating="known">
-            <strong>认识</strong><span>记得很清楚</span>
+            <strong>认识</strong><span>本词完成</span>
           </button>
           <button class="rating-button fuzzy" type="button" data-rating="fuzzy">
-            <strong>模糊</strong><span>需要再复习</span>
+            <strong>模糊</strong><span>稍后再练</span>
           </button>
           <button class="rating-button forgotten" type="button" data-rating="forgotten">
-            <strong>忘记</strong><span>重新记一遍</span>
+            <strong>忘记</strong><span>重新记忆</span>
           </button>
+        </section>
+
+        <section id="continue-panel" class="action-panel continue-panel" aria-label="继续学习" hidden>
+          <div class="answer-result">
+            <span id="result-dot" class="result-dot"></span>
+            <div><strong id="result-title">已记录</strong><span id="result-note">继续下一词</span></div>
+          </div>
+          <button id="next-card-button" class="next-card-button" type="button">下一词 <span aria-hidden="true">›</span></button>
+        </section>
+
+        <section id="completion-panel" class="action-panel completion-panel" aria-label="今日学习完成" hidden>
+          <div><strong>今日打卡成功</strong><span>10 个单词已全部掌握</span></div>
+          <button id="open-checkin-button" class="next-card-button" type="button">查看打卡</button>
         </section>
       </section>
 
       <section id="words-view" class="view secondary-view" aria-label="词表">
         <header class="secondary-header">
-          <span class="eyebrow">前 10 个词</span>
+          <span class="eyebrow">本组 10 个词</span>
           <h1>单词列表</h1>
-          <p>按学习状态快速回到任意一张单词卡。</p>
+          <p id="word-list-summary">查看今日判断与复习次数。</p>
         </header>
         <div id="word-list" class="word-list"></div>
       </section>
 
       <section id="progress-view" class="view secondary-view" aria-label="进度">
         <header class="secondary-header">
-          <span class="eyebrow">本机学习记录</span>
+          <span class="eyebrow">今日学习</span>
           <h1>学习进度</h1>
-          <p>记录保存在当前浏览器中，关闭页面也不会丢失。</p>
+          <p>模糊和忘记的单词会循环复习，直到全部掌握。</p>
         </header>
         <section class="progress-overview" aria-label="学习统计">
-          <div class="progress-score"><strong id="completed-count">0</strong><span>/ 10 已判断</span></div>
+          <div class="progress-score"><strong id="completed-count">0</strong><span>/ 10 已掌握</span></div>
           <div id="progress-bars" class="progress-bars"></div>
         </section>
-        <button id="continue-button" class="continue-button" type="button">继续学习</button>
+        <section class="first-rating-section" aria-labelledby="first-rating-title">
+          <div class="section-title-row">
+            <h2 id="first-rating-title">首次判断</h2>
+            <span id="attempt-total">已作答 0 次</span>
+          </div>
+          <div id="first-rating-stats" class="stat-grid"></div>
+        </section>
+        <button id="continue-button" class="primary-command" type="button">继续学习</button>
+      </section>
+
+      <section id="checkin-view" class="view secondary-view" aria-label="打卡">
+        <header class="secondary-header checkin-header">
+          <span class="eyebrow">每日记录</span>
+          <h1>学习打卡</h1>
+          <p>当日全部单词掌握后，日历自动点亮。</p>
+        </header>
+
+        <section class="calendar-section" aria-label="月度打卡日历">
+          <div class="calendar-toolbar">
+            <button id="previous-month" class="icon-button calendar-button" type="button" aria-label="上个月" title="上个月">‹</button>
+            <h2 id="calendar-title">2026年7月</h2>
+            <button id="next-month" class="icon-button calendar-button" type="button" aria-label="下个月" title="下个月">›</button>
+          </div>
+          <div class="weekday-row" aria-hidden="true">
+            <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+          </div>
+          <div id="calendar-grid" class="calendar-grid"></div>
+        </section>
+
+        <section class="day-summary" aria-labelledby="selected-date-label">
+          <div class="section-title-row">
+            <h2 id="selected-date-label">今日记录</h2>
+            <span id="checkin-status">未完成</span>
+          </div>
+          <div id="day-rating-stats" class="stat-grid"></div>
+          <div class="day-detail-row">
+            <span>已掌握</span><strong id="day-mastered">0 / 10</strong>
+            <span>累计判断</span><strong id="day-attempts">0 次</strong>
+          </div>
+        </section>
       </section>
 
       <nav class="bottom-nav" aria-label="主导航">
@@ -132,6 +190,9 @@
         </button>
         <button class="nav-button" type="button" data-view="progress-view">
           <span class="nav-icon">▥</span><span>进度</span>
+        </button>
+        <button class="nav-button" type="button" data-view="checkin-view">
+          <span class="nav-icon">▦</span><span>打卡</span>
         </button>
       </nav>
     </main>

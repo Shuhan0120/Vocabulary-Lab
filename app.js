@@ -144,6 +144,7 @@ const WORDS = [
 ];
 
 const STORAGE_KEY = "vocabulary-lab-v2";
+const AUDIO_BASE = "audio/us";
 const TODAY_KEY = localDateKey(new Date());
 
 const savedApp = loadApp();
@@ -411,7 +412,7 @@ function renderAnswer(item) {
       <article class="example-item">
         <p class="example-primary">${primary}</p>
         <p class="example-secondary">${secondary}</p>
-        <button class="icon-button example-audio" type="button" data-example="${index}" aria-label="播放例句发音" title="播放例句发音">🔊</button>
+        <button class="icon-button example-audio" type="button" data-example="${index}" aria-label="播放例句美音" title="播放例句美音" aria-pressed="false">🔊</button>
       </article>`;
   }).join("");
 
@@ -486,6 +487,7 @@ function rateCurrent(rating) {
 function advanceSession() {
   const session = state.session;
   if (session.phase !== "answer") return;
+  stopAudio();
 
   if (!session.queue.length) {
     finishSession();
@@ -625,7 +627,70 @@ function selectCalendarDay(key) {
   renderCalendar();
 }
 
-function speak(text) {
+let activeAudio = null;
+let activeAudioButton = null;
+
+function audioPath(wordIndex, exampleIndex = null) {
+  const wordNumber = String(wordIndex + 1).padStart(2, "0");
+  if (exampleIndex === null) return `${AUDIO_BASE}/${wordNumber}-word.mp3`;
+  const exampleNumber = String(exampleIndex + 1).padStart(2, "0");
+  return `${AUDIO_BASE}/${wordNumber}-example-${exampleNumber}.mp3`;
+}
+
+function clearAudioState() {
+  if (activeAudioButton) {
+    activeAudioButton.classList.remove("is-playing");
+    activeAudioButton.setAttribute("aria-pressed", "false");
+  }
+  activeAudioButton = null;
+}
+
+function stopAudio() {
+  if (activeAudio) {
+    activeAudio.pause();
+    activeAudio.currentTime = 0;
+    activeAudio = null;
+  }
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  clearAudioState();
+}
+
+function markAudioPlaying(button) {
+  activeAudioButton = button;
+  if (!button) return;
+  button.classList.add("is-playing");
+  button.setAttribute("aria-pressed", "true");
+}
+
+function playAudio(path, fallbackText, button) {
+  if (activeAudioButton === button) {
+    stopAudio();
+    return;
+  }
+
+  stopAudio();
+  const player = new Audio(path);
+  let fallbackStarted = false;
+  activeAudio = player;
+
+  const useFallback = () => {
+    if (fallbackStarted || activeAudio !== player) return;
+    fallbackStarted = true;
+    activeAudio = null;
+    clearAudioState();
+    speak(fallbackText, button);
+  };
+
+  player.addEventListener("playing", () => markAudioPlaying(button), { once: true });
+  player.addEventListener("ended", () => {
+    if (activeAudio === player) activeAudio = null;
+    clearAudioState();
+  }, { once: true });
+  player.addEventListener("error", useFallback, { once: true });
+  player.play().catch(useFallback);
+}
+
+function speak(text, button = null) {
   if (!("speechSynthesis" in window)) {
     showToast("当前浏览器不支持语音播放");
     return;
@@ -636,10 +701,14 @@ function speak(text) {
   utterance.rate = 0.82;
   const voices = speechSynthesis.getVoices();
   utterance.voice = voices.find(voice => voice.lang === "en-US") || voices.find(voice => voice.lang.startsWith("en")) || null;
+  utterance.addEventListener("start", () => markAudioPlaying(button), { once: true });
+  utterance.addEventListener("end", clearAudioState, { once: true });
+  utterance.addEventListener("error", clearAudioState, { once: true });
   window.speechSynthesis.speak(utterance);
 }
 
 function switchView(id) {
+  stopAudio();
   $$(".view").forEach(view => view.classList.toggle("active", view.id === id));
   $$(".nav-button").forEach(button => {
     const active = button.dataset.view === id;
@@ -670,14 +739,18 @@ $$(".mode-button").forEach(button => button.addEventListener("click", () => {
 
 $$(".rating-button").forEach(button => button.addEventListener("click", () => rateCurrent(button.dataset.rating)));
 els.nextCard.addEventListener("click", advanceSession);
-$("#word-audio").addEventListener("click", () => {
-  if (validWordIndex(state.session.current)) speak(WORDS[state.session.current].speak || WORDS[state.session.current].word);
+$("#word-audio").addEventListener("click", event => {
+  if (!validWordIndex(state.session.current)) return;
+  const index = state.session.current;
+  playAudio(audioPath(index), WORDS[index].speak || WORDS[index].word, event.currentTarget);
 });
 
 els.examples.addEventListener("click", event => {
   const button = event.target.closest("[data-example]");
   if (!button || !validWordIndex(state.session.current)) return;
-  speak(WORDS[state.session.current].examples[Number(button.dataset.example)][0]);
+  const wordIndex = state.session.current;
+  const exampleIndex = Number(button.dataset.example);
+  playAudio(audioPath(wordIndex, exampleIndex), WORDS[wordIndex].examples[exampleIndex][0], button);
 });
 
 $$(".nav-button").forEach(button => button.addEventListener("click", () => switchView(button.dataset.view)));
@@ -713,4 +786,3 @@ renderStudy();
 renderWordList();
 renderProgress();
 renderCalendar();
-
